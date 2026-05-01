@@ -9,13 +9,28 @@ const fs = require('fs');
 const path = require('path');
 const pgp = require('pg-promise')();
 
-const cn = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'blog',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    allowExitOnIdle: true
+let cn;
+if (process.env.DATABASE_URL) {
+    cn = process.env.DATABASE_URL;
+} else {
+    cn = {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 5432,
+        database: process.env.DB_NAME || 'blog',
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || 'postgres',
+        allowExitOnIdle: true
+    }
+}
+
+// Enable SSL when requested (e.g., for Render Postgres)
+if (process.env.DB_SSL === 'true') {
+    // If cn is a connection string, convert to config object including ssl
+    if (typeof cn === 'string') {
+        cn = { connectionString: cn, ssl: { rejectUnauthorized: false } };
+    } else {
+        cn.ssl = { rejectUnauthorized: false };
+    }
 }
 
 const storage = multer.diskStorage({
