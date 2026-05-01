@@ -23,8 +23,12 @@ if (process.env.DATABASE_URL) {
     }
 }
 
-// Enable SSL when requested (e.g., for Render Postgres)
-if (process.env.DB_SSL === 'true') {
+// Debug info (no secrets)
+console.log('DATABASE_URL present?', !!process.env.DATABASE_URL, 'DB_SSL=', process.env.DB_SSL, 'NODE_ENV=', process.env.NODE_ENV);
+
+// Enable SSL when requested or when using DATABASE_URL in production (Render requires TLS)
+const shouldUseSSL = process.env.DB_SSL === 'true' || (process.env.DATABASE_URL && process.env.NODE_ENV === 'production');
+if (shouldUseSSL) {
     // If cn is a connection string, convert to config object including ssl
     if (typeof cn === 'string') {
         cn = { connectionString: cn, ssl: { rejectUnauthorized: false } };
